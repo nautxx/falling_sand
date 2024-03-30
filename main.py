@@ -1,6 +1,13 @@
+import pygame
 import random
 import numpy as np
-import pygame
+
+width, height = 800, 800
+hue_value = 200
+gravity = 0.2
+w = 5
+cols = width // w
+rows = height // w
 
 def make_2d_array(cols, rows):
     arr = np.zeros((cols, rows), dtype=int)
@@ -12,33 +19,8 @@ def within_cols(i):
 def within_rows(j):
     return 0 <= j <= rows - 1
 
-def setup():
-    global cols, rows, grid, velocity_grid, hue_value, gravity, w, screen
-    pygame.init()
-    width, height = 800, 800
-    screen = pygame.display.set_mode((width, height))
-    print("Width:", width)
-    print("Height:", height)
-    pygame.display.set_caption("Sand Simulation")
-    clock = pygame.time.Clock()
-    hue_value = 200
-    gravity = 0.2
-    w = 5
-    cols = width // w
-    rows = height // w
-    print("Cols:", cols)
-    print("Rows:", rows)
-    grid = make_2d_array(cols, rows)
-    velocity_grid = make_2d_array(cols, rows)
-
 def draw(screen):
-    global grid, velocity_grid, hue_value, cols, rows
-    screen.fill((0, 0, 0))
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            return
+    global hue_value, velocity_grid, cols, rows, gravity, w
 
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
@@ -88,11 +70,13 @@ def draw(screen):
                         next_velocity_grid[i][y] = velocity + gravity
                         moved = True
                         break
+
                     elif below_a == 0:
                         next_grid[i + dir][y] = state
                         next_velocity_grid[i + dir][y] = velocity + gravity
                         moved = True
                         break
+
                     elif below_b == 0:
                         next_grid[i - dir][y] = state
                         next_velocity_grid[i - dir][y] = velocity + gravity
@@ -103,12 +87,43 @@ def draw(screen):
                 next_grid[i][j] = grid[i][j]
                 next_velocity_grid[i][j] = velocity_grid[i][j] + gravity
 
-    grid = next_grid
-    velocity_grid = next_velocity_grid
+    grid[:] = next_grid
+    velocity_grid[:] = next_velocity_grid
 
-    pygame.display.flip()
+def main():
+    global grid, velocity_grid
+
+    # initialize pygame
+    pygame.init()
+    screen = pygame.display.set_mode((width, height))
+    clock = pygame.time.Clock()
+    pygame.display.set_caption("Sand Simulation")
+    
+    # create the grids
+    grid = make_2d_array(cols, rows)
+    velocity_grid = make_2d_array(cols, rows)
+
+    # start the game loop
+    loop = True
+    while loop:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            
+        # set background color
+        screen.fill((0, 0, 0))
+
+        # draw elements on the screen
+        draw(screen)
+
+        # update the display
+        pygame.display.flip()
+
+        # cap the frame rate
+        clock.tick(60)
+    
+    pygame.quit()
 
 if __name__ == "__main__":
-    setup()
-    while True:
-        draw(screen)
+    main()
