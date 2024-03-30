@@ -2,6 +2,7 @@ import pygame
 import random
 import numpy as np
 
+# constants
 width, height = 800, 800
 hue_value = 200
 gravity = 0.2
