@@ -1,72 +1,74 @@
 import pygame
 import math
 
-# Initialize pygame
-pygame.init()
-
-# Set up the display
-width, height = 1000, 400
-screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Pi Day Leibniz Series")
-
-# Colors
+# constants
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 
-# Initialize variables
-pi = 4
-iterations = 0
-history = [pi]  # Start history with initial value of pi
-min_y = 2
-max_y = 4
+def main():
+    # Initialize pygame
+    pygame.init()
 
-# Font
-font = pygame.font.Font(None, 64)
+    # Set up the display
+    width, height = 1200, 600
+    screen = pygame.display.set_mode((width, height))
+    pygame.display.set_caption("Leibniz Formula for Pi")
+    font = pygame.font.Font(None, 64)
 
-# Main loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    # Initialize variables
+    pi = 4
+    iterations = 0
+    history = [pi]  # Start history with initial value of pi
+    min_y = 2
+    max_y = 4
 
-    # Clear the screen
-    screen.fill(BLACK)
+    # main loop
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-    # Calculate denominator
-    den = iterations * 2 + 3
+        # clear the screen
+        screen.fill(WHITE)
 
-    # Update pi value
-    if iterations % 2 == 0:
-        pi -= (4 / den)
-    else:
-        pi += (4 / den)
+        # calculate denominator
+        den = iterations * 2 + 3
 
-    # Add pi value to history
-    history.append(pi)
+        # update pi value
+        if iterations % 2 == 0:
+            pi -= (4 / den)
+        else:
+            pi += (4 / den)
 
-    # Draw horizontal line representing actual value of pi
-    pi_y = height - (pi - min_y) / (max_y - min_y) * height
-    pygame.draw.line(screen, RED, (0, pi_y), (width, pi_y))
+        # add pi value to history
+        history.append(pi)
 
-    # Draw curve representing history of pi values
-    points = [(i * (width / len(history)), height - (value - min_y) / (max_y - min_y) * height)
-              for i, value in enumerate(history)]
-    
-    # Draw the curve if there are at least two points
-    if len(points) > 1:
-        pygame.draw.lines(screen, WHITE, False, points, 2)
+        # draw horizontal line representing actual value of pi
+        pi_y = height - (pi - min_y) / (max_y - min_y) * height
+        pygame.draw.line(screen, RED, (0, pi_y), (width, pi_y))
 
-    # Render pi value
-    pi_text = font.render(str(pi), True, WHITE)
-    screen.blit(pi_text, (10, 10))
+        # draw curve representing history of pi values
+        points = [(i * (width / len(history)), height - (value - min_y) / (max_y - min_y) * height)
+                for i, value in enumerate(history)]
+        
+        # draw the curve if there are at least two points
+        if len(points) > 1:
+            pygame.draw.lines(screen, BLACK, False, points, 2)
 
-    # Update iteration count
-    iterations += 1
+        # render pi value
+        pi_text = font.render(str(pi), True, BLACK)
+        screen.blit(pi_text, (10, 550))
 
-    # Update the display
-    pygame.display.flip()
+        # update iteration count
+        iterations += 1
 
-# Quit pygame
-pygame.quit()
+        # update the display
+        pygame.display.flip()
+
+    # quit pygame
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
