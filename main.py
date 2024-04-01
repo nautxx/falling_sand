@@ -1,128 +1,123 @@
 import pygame
 import random
 import numpy as np
+from settings import *
 
-# constants
-WIDTH, HEIGHT = 800, 800
-HUE_VALUE = 200
-GRAVITY = 2
-DIM = 4
-COLS = WIDTH // DIM
-ROWS = HEIGHT // DIM
 
-def make_2d_array(COLS, ROWS):
-    return np.zeros((COLS, ROWS), dtype=int)
+class Game:
+    def __init__(self):
+        # initialize pygame
+        pygame.init()
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.clock = pygame.time.Clock()
+        pygame.display.set_caption("Sand Simulation")
+        
+        # create the grids
+        self.grid = self.make_2d_array(COLS, ROWS)
+        self.velocity_grid = self.make_2d_array(COLS, ROWS)
 
-def within_cols(i):
-    return 0 <= i <= COLS - 1
+    def make_2d_array(self, COLS, ROWS):
+        return np.zeros((COLS, ROWS), dtype=int)
 
-def within_rows(j):
-    return 0 <= j <= ROWS - 1
+    def within_cols(self, i):
+        return 0 <= i <= COLS - 1
 
-def draw(screen):
-    global HUE_VALUE, velocity_grid
+    def within_rows(self, j):
+        return 0 <= j <= ROWS - 1
 
-    mouse_x, mouse_y = pygame.mouse.get_pos()
+    def draw(self):
+        global HUE_VALUE
 
-    if pygame.mouse.get_pressed()[0]:
-        mouse_col = mouse_x // DIM
-        mouse_row = mouse_y // DIM
-        matrix = 5
-        extent = matrix // 2
-        for i in range(-extent, extent + 1):
-            for j in range(-extent, extent + 1):
-                if random.random() < 0.75:
-                    col = mouse_col + i
-                    row = mouse_row + j
-                    if within_cols(col) and within_rows(row):
-                        grid[col][row] = HUE_VALUE
-                        velocity_grid[col][row] = 1
-        HUE_VALUE += 0.5
-        if HUE_VALUE > 360:
-            HUE_VALUE = 1
+        mouse_x, mouse_y = pygame.mouse.get_pos()
 
-    for i in range(COLS):
-        for j in range(ROWS):
-            if grid[i][j] > 0:
-                hue = grid[i][j] % 360
-                color = pygame.Color(0)
-                color.hsla = (hue, 100, 50, 100)
-                pygame.draw.rect(screen, color, (i * DIM, j * DIM, DIM, DIM))
+        if pygame.mouse.get_pressed()[0]:
+            mouse_col = mouse_x // DIM
+            mouse_row = mouse_y // DIM
+            matrix = 5
+            extent = matrix // 2
+            for i in range(-extent, extent + 1):
+                for j in range(-extent, extent + 1):
+                    if random.random() < 0.75:
+                        col = mouse_col + i
+                        row = mouse_row + j
+                        if self.within_cols(col) and self.within_rows(row):
+                            self.grid[col][row] = HUE_VALUE
+                            self.velocity_grid[col][row] = 1
+            HUE_VALUE += 0.5
+            if HUE_VALUE > 360:
+                HUE_VALUE = 1
 
-    next_grid = make_2d_array(COLS, ROWS)
-    next_velocity_grid = make_2d_array(COLS, ROWS)
+        for i in range(COLS):
+            for j in range(ROWS):
+                if self.grid[i][j] > 0:
+                    hue = self.grid[i][j] % 360
+                    color = pygame.Color(0)
+                    color.hsla = (hue, 100, 50, 100)
+                    pygame.draw.rect(self.screen, color, (i * DIM, j * DIM, DIM, DIM))
 
-    for i in range(COLS):
-        for j in range(ROWS):
-            state = grid[i][j]
-            velocity = velocity_grid[i][j]
-            moved = False
-            if state > 0:
-                new_pos = int(min(max(j + velocity, 0), ROWS - 1))
-                for y in range(new_pos, j, -1):
-                    below = grid[i][y]
-                    dir = 1 if random.random() < 0.5 else -1
-                    below_a = grid[i + dir][y] if within_cols(i + dir) else -1
-                    below_b = grid[i - dir][y] if within_cols(i - dir) else -1
+        next_grid = self.make_2d_array(COLS, ROWS)
+        next_velocity_grid = self.make_2d_array(COLS, ROWS)
 
-                    if below == 0:
-                        next_grid[i][y] = state
-                        next_velocity_grid[i][y] = velocity + GRAVITY
-                        moved = True
-                        break
+        for i in range(COLS):
+            for j in range(ROWS):
+                state = self.grid[i][j]
+                velocity = self.velocity_grid[i][j]
+                moved = False
+                if state > 0:
+                    new_pos = int(min(max(j + velocity, 0), ROWS - 1))
+                    for y in range(new_pos, j, -1):
+                        below = self.grid[i][y]
+                        dir = 1 if random.random() < 0.5 else -1
+                        below_a = self.grid[i + dir][y] if self.within_cols(i + dir) else -1
+                        below_b = self.grid[i - dir][y] if self.within_cols(i - dir) else -1
 
-                    elif below_a == 0:
-                        next_grid[i + dir][y] = state
-                        next_velocity_grid[i + dir][y] = velocity + GRAVITY
-                        moved = True
-                        break
+                        if below == 0:
+                            next_grid[i][y] = state
+                            next_velocity_grid[i][y] = velocity + GRAVITY
+                            moved = True
+                            break
 
-                    elif below_b == 0:
-                        next_grid[i - dir][y] = state
-                        next_velocity_grid[i - dir][y] = velocity + GRAVITY
-                        moved = True
-                        break
+                        elif below_a == 0:
+                            next_grid[i + dir][y] = state
+                            next_velocity_grid[i + dir][y] = velocity + GRAVITY
+                            moved = True
+                            break
 
-            if state > 0 and not moved:
-                next_grid[i][j] = grid[i][j]
-                next_velocity_grid[i][j] = velocity_grid[i][j] + GRAVITY
+                        elif below_b == 0:
+                            next_grid[i - dir][y] = state
+                            next_velocity_grid[i - dir][y] = velocity + GRAVITY
+                            moved = True
+                            break
 
-    grid[:] = next_grid
-    velocity_grid[:] = next_velocity_grid
+                if state > 0 and not moved:
+                    next_grid[i][j] = self.grid[i][j]
+                    next_velocity_grid[i][j] = self.velocity_grid[i][j] + GRAVITY
 
-def main():
-    global grid, velocity_grid
+        self.grid[:] = next_grid
+        self.velocity_grid[:] = next_velocity_grid
 
-    # initialize pygame
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    clock = pygame.time.Clock()
-    pygame.display.set_caption("Sand Simulation")
-    
-    # create the grids
-    grid = make_2d_array(COLS, ROWS)
-    velocity_grid = make_2d_array(COLS, ROWS)
+    def run(self):
+        # start the game loop
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                
+            # set background color
+            self.screen.fill((255, 255, 255))
 
-    # start the game loop
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            
-        # set background color
-        screen.fill((255, 255, 255))
+            # draw elements on the screen
+            self.draw()
 
-        # draw elements on the screen
-        draw(screen)
+            # update the display
+            pygame.display.flip()
 
-        # update the display
-        pygame.display.flip()
-
-        # cap the frame rate
-        clock.tick(120)
-    
-    pygame.quit()
+            # cap the frame rate
+            self.clock.tick(120)
+        
+        pygame.quit()
 
 if __name__ == "__main__":
-    main()
+    sim = Game()
+    sim.run()
